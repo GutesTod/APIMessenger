@@ -1,5 +1,8 @@
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import (
+    create_async_engine, 
+    async_sessionmaker
+)
 from pydantic_settings import BaseSettings
 
 
@@ -14,12 +17,21 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
-engine = create_engine(settings.db_url)
+engine = create_async_engine(settings.db_url, echo=True)
+
+# Создаем асинхронный sessionmaker
+SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 async def get_session():
-    session = sessionmaker(engine, expire_on_commit=False)
-    return session
+    async with SessionLocal() as db:
+        try:
+            yield db
+        except Exception:
+            await db.rollback()
+            raise
+        else:
+            await db.commit()
 
 
 class Base(DeclarativeBase):

@@ -1,4 +1,4 @@
-from typing import Generic, Type, TypeVar, Optional
+from typing import Generic, Type, TypeVar
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.settings import Base
 from fastapi import HTTPException
